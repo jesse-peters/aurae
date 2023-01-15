@@ -1,0 +1,75 @@
+# ---------------------------------------------------------------------------- #
+#             Apache 2.0 License Copyright © 2022 The Aurae Authors            #
+#                                                                              #
+#                +--------------------------------------------+                #
+#                |   █████╗ ██╗   ██╗██████╗  █████╗ ███████╗ |                #
+#                |  ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔════╝ |                #
+#                |  ███████║██║   ██║██████╔╝███████║█████╗   |                #
+#                |  ██╔══██║██║   ██║██╔══██╗██╔══██║██╔══╝   |                #
+#                |  ██║  ██║╚██████╔╝██║  ██║██║  ██║███████╗ |                #
+#                |  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ |                #
+#                +--------------------------------------------+                #
+#                                                                              #
+#                         Distributed Systems Runtime                          #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#   Licensed under the Apache License, Version 2.0 (the "License");            #
+#   you may not use this file except in compliance with the License.           #
+#   You may obtain a copy of the License at                                    #
+#                                                                              #
+#       http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                              #
+#   Unless required by applicable law or agreed to in writing, software        #
+#   distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+#   See the License for the specific language governing permissions and        #
+#   limitations under the License.                                             #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+name: "Cargo Docs (050) [aurae-builder:builder-latest]"
+on:
+ push:
+   branches: main
+ pull_request:
+   branches: main
+
+permissions:
+ contents: read
+ packages: write
+env:
+ CARGO_TERM_COLOR: always
+jobs:
+ build-container:
+   uses: ./.github/workflows/031-ubuntu-aurae-builder-image-ubuntu-docker-build-tester.yml
+ docs:
+   name: release ${{ matrix.target }}
+   runs-on: ubuntu-latest
+   strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64-unknown-linux-musl]
+   needs: build-container
+   container:
+     image: ghcr.io/${{ github.repository }}/aurae-builder:tester-latest
+     credentials:
+       username:  ${{ github.actor }}
+       password:  ${{ secrets.GITHUB_TOKEN }}
+   steps:
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
+      with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: build-compile-test-container-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Compile and release
+      uses: rust-build/rust-build.action@v1.4.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        RUSTTARGET: ${{ matrix.target }}
+        EXTRA_FILES: "README.md LICENSE"
