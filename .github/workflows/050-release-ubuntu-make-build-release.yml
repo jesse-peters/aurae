@@ -53,7 +53,7 @@ jobs:
               uses: actions/checkout@v3
 
             - name: GH Login
-              run: gh auth login
+              run: gh auth login -p
 
             - uses: actions/cache@v3
               with:
