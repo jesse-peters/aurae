@@ -35,7 +35,7 @@ permissions:
  packages: write
 env:
  CARGO_TERM_COLOR: always
- CACHE_VERSION: v0
+ CACHE_VERSION: v1
 jobs:
  build-container:
    name: Build container image
