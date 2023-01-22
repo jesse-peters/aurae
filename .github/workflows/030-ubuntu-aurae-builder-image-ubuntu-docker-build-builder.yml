@@ -76,7 +76,6 @@ jobs:
 
      - name: Create Docker Build Image
        id: build-and-push
-       if: steps.check-change.outputs.cache-hit != 'true' && github.event.pull_request.head.repo.full_name == github.repository
        uses: docker/build-push-action@v2
        timeout-minutes: 15
        with:
